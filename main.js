@@ -1,12 +1,31 @@
+//https://partiel-b1dev.imatrythis.com/api
+
 let token = ""
 const content = document.querySelector(".content")
 let nameCompte = "Compte"
 
-function render(pageContent) {
-    content.innerHTML = ""
-    content.innerHTML = pageContent
+
+//<----------------------------FETCH----------------------->
+
+
+async function fetchListe() {
+    let params = {
+        headers: {"Content-type": "application.json", "Authorization": `Bearer ${token}`},
+        method: "GET"
+    }
+    return await fetch(" https://partiel-b1dev.imatrythis.com/api/mylist", params)
+        .then(response => response.json)
+        .then(data => {
+                if (data.message == "Invalid JWT Token" | "JWT Token not found") {
+                    renderLoginForm()
+                } else {
+                    return data
+                }
+            }
+        )
 }
-function login() {
+
+async function login() {
     let username = document.querySelector('#username')
     let password = document.querySelector('#password')
 
@@ -19,7 +38,7 @@ function login() {
         body: JSON.stringify(body),
         method: "POST"
     }
-    fetch("https://partiel-b1dev.imatrythis.com/api/login", params)
+    return await fetch("https://partiel-b1dev.imatrythis.com/api/login", params)
         .then(response => response.json())
         .then(data => {
             if (data.message == "Invalid JWT Token" | "JWT Token not found") {
@@ -31,6 +50,59 @@ function login() {
             }
         })
 }
+
+async function fetchMyList() {
+    let params = {
+        method: "GET",
+        headers: {"content-type": "application/json", "authorization": `Bearer ${token}`}
+    }
+    return await fetch(`https://partiel-b1dev.imatrythis.com/api/mylist`, params)
+        .then(response => response.json())
+        .then(data => {
+            if ((data.message == "Invalid JWT Token" | "JWT Token not found")) {
+                renderLoginForm()
+            } else {
+                return data
+                console.log(data)
+            }
+        })
+
+}
+
+async function sendListe(listeToSend) {
+    let body = {
+        content: listeToSend
+    }
+    let params = {
+        headers: {"Content-type": "application/json", "Authorization": `Bearer ${token}`},
+        body: JSON.stringify(body),
+        method: "POST"
+    }
+    return await fetch("https://partiel-b1dev.imatrythis.com/api/mylist/new", params)
+        .then(response => response.json())
+        .then(data => {
+            if (data.message == "Invalid JWT Token" | "Invalid credentials.") {
+                renderLoginForm()
+            } else {
+                if (data == "OK") {
+                    run()
+                } else {
+                    alert("tu te fou de moi")
+                    run()
+                }
+            }
+        })
+}
+
+
+//<----------------------------FRONT----------------------->
+
+
+function render(pageContent) {
+    content.innerHTML = ""
+    content.innerHTML = pageContent
+}
+
 function renderLoginForm() {
     let loginTemplate = `
     <div class="row d-flex justify-content-end">
@@ -56,73 +128,59 @@ function generateListe(liste) {
 </div>`
     return produit
 }
-function afficherListe(tableauListe) {
-    let contentListe = ""
 
-    let listeAndListeForm =contentListe +generateListe() +generateListeForm()
+function renderListe(tableauListe) {
+    let contentListe = ""
+    tableauListe.forEach(liste => {
+        contentListe += generateListe(liste)
+    })
+    let listeAndListeForm =contentListe +generateListeForm()
     render(listeAndListeForm)
-    const postNameliste = document.querySelector("#postNameliste")
-    const postDescriptionliste = document.querySelector("#postDescriptionliste")
+    const postNameListe = document.querySelector("#postNameListe")
+    const postDescriptionListe = document.querySelector("#postDescriptionListe")
     const postListeButton = document.querySelector("#postListeButton")
 
+    const formulaire = postNameListe + postDescriptionListe
+
     postListeButton.addEventListener("click", () => {
-        ajouterListe(postNameliste.value +postDescriptionliste)
+        sendListe(formulaire.value)
     })
 }
-async function fetchListe() {
-    let params = {
-        headers: {"Content-type": "application.json", "Authorization": `Bearer ${token}`},
-        method: "GET"
-    }
-    return await fetch(" https://partiel-b1dev.imatrythis.com/api/mylist", params)
-        .then(response => response.json)
-        .then(data => {
-                if (data.message == "Invalid JWT Token" | "JWT Token not found") {
-                    renderLoginForm()
-                } else {
-                    return data
-                }
-            }
-        )
+
+function generateListe() {
+    let productTemplate = `<div class="form-control my-2 px-4 d-flex justify-content-between">
+                <div class="divProduct${product.id}">
+                    <h5>${product.name}</h5>
+                    <h6>${product.description}</h6>
+                    <h6>status: ${product.status}</h6>
+                </div>
+                <div>
+                    <button class="btn btn-primary buttonDeleteProduct" id="${product.id}">DELETE</button>
+                    <button class="btn btn-primary buttonSwitchStatusProduct" id="${product.id}">Swicth status</button>
+                    <button class="btn btn-secondary buttonEditProduct" id="${product.id}">EDIT</button>
+                </div>
+            </div>`
+    return productTemplate
 }
-function sendListe(listeToSend){
-    let body = {
-        content: listeToSend
-    }
-    let params = {
-        headers: {"Content-type": "application/json", "Authorization": `Bearer ${token}`},
-        body: JSON.stringify(body),
-        method: "POST"
-    }
-    fetch("https://partiel-b1dev.imatrythis.com/api/mylist/new", params)
-        .then(response=> response.json())
-        .then(data=>{
-            if (data.message == "Invalid JWT Token"  | "Invalid credentials."){
-                renderLoginForm()
-            } else {
-                if (data == "OK"){
-                    run()
-                }else {
-                    alert("tu te fou de moi")
-                    run()}
-            }
-        })
-}
-function run() {
-    if (!token) {
-        renderLoginForm()
-    } else {
-        fetchListe().then(liste=> {
-            afficherListe(liste)
-        })
-    }
-}
+
 function generateListeForm() {
     let messageFormTemplate = `<div class="form-control">
           <input class="form-control" type="text" name="" id="postNameListe" placeholder="name">
           <input class="form-control" type="text" name="" id="postDescriptionListe" placeholder="descritpion">
           <button class="btn btn-success form-control" id="postListeButton">Envoyer</button>
         </div>`
-    return messageFormTemplate}
+    return messageFormTemplate
+}
+
+//<----------------------------RUN----------------------->
+function run() {
+    if (!token) {
+        renderLoginForm()
+    } else {
+        fetchListe().then(tableauliste => {
+            renderListe(tableauliste)
+        })
+    }
+}
 
 run()
