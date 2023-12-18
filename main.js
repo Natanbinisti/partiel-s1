@@ -82,7 +82,7 @@ function renderListe(tableauListe) {
     let contentListe = ""
     tableauListe.forEach(product => {
         contentListe += `
-        <div class="form-control my-2 px-4 d-flex justify-content-between">
+        <div class="form-control d-flex justify-content-between">
                 <div class="divProduct${product.id}">
                     <h5>${product.name}</h5>
                     <h6>${product.description}</h6>
