@@ -4,12 +4,11 @@ let token = ""
 const content = document.querySelector(".content")
 let nameCompte = "Compte"
 
-
 function run() {
     if (!token) {
         renderLoginForm()
     } else {
-        fetchListe().then(liste => {
+        fetchListe().then((liste)=>{
             renderListe(liste)
         })
     }
@@ -17,7 +16,6 @@ function run() {
 async function login() {
     let username = document.querySelector('#username')
     let password = document.querySelector('#password')
-
     let body = {
         username: username.value,
         password: password.value
@@ -33,43 +31,82 @@ async function login() {
             if (data.message == "Invalid JWT Token" | "JWT Token not found") {
                 renderLoginForm()
             } else {
+                nameCompte = document.querySelector(".nameCompte")
                 token = data.token
                 nameCompte = username.value
-                run()
             }
         })
 }
 
 function renderLoginForm() {
     let loginTemplate = `
-    <div class="row d-flex justify-content-end">
-    <input class="col-auto" type="text" placeholder="username" id="username">
-    <input class="col-auto" type="password" placeholder="password" id="password">
-    <hr>
-    <button type="button" class="btn col-3" id="loginButton">LogIn</button>
-</div>`
+<nav class="navbar bg-body-tertiary">
+    <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1 ">${nameCompte}</span>
+    </div>
+</nav>
+    <div class="d-flex justify-content-end">
+        <input class="col-auto" type="text" placeholder="username" id="username">
+        <input class="col-auto" type="password" placeholder="password" id="password">
+        <hr>
+        <button type="button" class="btn btn-secondary col-3" id="loginButton">LogIn</button>
+    </div>`
     render(loginTemplate)
     const loginButton = document.querySelector("#loginButton")
     loginButton.addEventListener("click", () => {
-        login()
+        login().then(()=>{
+            run()
+        })
     })
 }
 
-function generateListe(tableauListe) {
-        let productTemplate = `<div class="form-control my-2 px-4 d-flex justify-content-between">
+
+
+async function fetchListe() {
+    let params = {
+        headers: {"Content-type": "application.json", "Authorization": `Bearer ${token}`},
+        method: "GET"
+    }
+    return await fetch("https://partiel-b1dev.imatrythis.com/api/mylist", params)
+        .then(response => response.json())
+        .then(data => {
+                if (data.message == "Invalid JWT Token" | "JWT Token not found") {
+                    renderLoginForm()
+                } else {
+                    return data
+                }
+            }
+        )
+}
+function renderListe(tableauListe) {
+    let contentListe = ""
+    tableauListe.forEach(product => {
+        contentListe += `
+        <div class="form-control my-2 px-4 d-flex justify-content-between">
                 <div class="divProduct${product.id}">
                     <h5>${product.name}</h5>
                     <h6>${product.description}</h6>
                     <h6>status: ${product.status}</h6>
                 </div>
-                <div>
-                    <button class="btn btn-primary buttonDeleteProduct" id="${product.id}">DELETE</button>
-                    <button class="btn btn-primary buttonSwitchStatusProduct" id="${product.id}">Swicth status</button>
-                    <button class="btn btn-secondary buttonEditProduct" id="${product.id}">EDIT</button>
-                </div>
-            </div>`
-        return productTemplate
+       
+        </div>`
+
+    })
+    let listeAndListeGenerate = contentListe + generateListeForm()
+    render(listeAndListeGenerate)
+
+    const postListeButton = document.querySelector("#postListeButton")
+    const postNameListe = document.querySelector("#postNameListe")
+    const postDescriptionListe = document.querySelector("#postDescriptionListe")
+
+    postListeButton.addEventListener("click",() => {
+        sendListe(postNameListe.value,postDescriptionListe.value).then((data) => {
+            run()
+        })
+    })
+
 }
+
 
 function generateListeForm() {
     let messageFormTemplate = `<div class="form-control">
@@ -80,28 +117,10 @@ function generateListeForm() {
     return messageFormTemplate
 }
 
-function renderListe(tableauListe) {
-    let contentListe = ""
-    tableauListe.forEach(product => {
-        contentListe += generateListe(liste)
-    })
-    let listeAndListeForm = contentListe + generateListeForm()
-    render(listeAndListeForm)
-    const postNameListe = document.querySelector("#postNameListe")
-    const postDescriptionListe = document.querySelector("#postDescriptionListe")
-    const postListeButton = document.querySelector("#postListeButton")
-
-    const formulaire = postNameListe + postDescriptionListe
-
-    postListeButton.addEventListener("click", () => {
-        sendListe(formulaire.value)
-    })
-}
-
-async function sendListe(listeToSend) {
+async function sendListe(listeName,listeDescription) {
     let body = {
-        name: productName.value,
-        description: productDescription.value
+        name: listeName,
+        description: listeDescription
     }
     let params = {
         headers: {"Content-type": "application/json", "Authorization": `Bearer ${token}`},
@@ -114,32 +133,11 @@ async function sendListe(listeToSend) {
             if (data.message == "Invalid JWT Token" | "Invalid credentials.") {
                 renderLoginForm()
             } else {
-                if (data == "OK") {
-                    run()
-                } else {
-                    alert("menteur")
-                    run()
-                }
+                return data
             }
         })
 }
-async function fetchListe() {
-    let params = {
-        headers: {"Content-type": "application.json", "Authorization": `Bearer ${token}`},
-        body: JSON.stringify(),
-        method: "GET"
-    }
-    return await fetch("https://partiel-b1dev.imatrythis.com/api/mylist", params)
-        .then(response => response.json)
-        .then(data => {
-                if (data.message == "Invalid JWT Token" | "JWT Token not found") {
-                    renderLoginForm()
-                } else {
-                    return data
-                }
-            }
-        )
-}
+
 function render(pageContent) {
     content.innerHTML = ""
     content.innerHTML = pageContent
