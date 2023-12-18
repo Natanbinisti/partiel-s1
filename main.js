@@ -80,6 +80,11 @@ async function fetchListe() {
 }
 function renderListe(tableauListe) {
     let contentListe = ""
+    let navbar = `<nav class="navbar bg-body-tertiary">
+    <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1 ">${nameCompte}</span>
+    </div>
+</nav>`
     tableauListe.forEach(product => {
         contentListe += `
         <div class="form-control d-flex justify-content-between">
