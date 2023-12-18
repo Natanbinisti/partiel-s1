@@ -5,10 +5,15 @@ const content = document.querySelector(".content")
 let nameCompte = "Compte"
 
 
-//<----------------------------FETCH----------------------->
-
-
-
+function run() {
+    if (!token) {
+        renderLoginForm()
+    } else {
+        fetchListe().then(liste => {
+            renderListe(liste)
+        })
+    }
+}
 async function login() {
     let username = document.querySelector('#username')
     let password = document.querySelector('#password')
@@ -34,8 +39,6 @@ async function login() {
             }
         })
 }
-
-//<----------------------------FRONT----------------------->
 
 function renderLoginForm() {
     let loginTemplate = `
@@ -137,22 +140,12 @@ async function fetchListe() {
             }
         )
 }
-
-//<----------------------------RUN----------------------->
 function render(pageContent) {
     content.innerHTML = ""
     content.innerHTML = pageContent
 }
 
-function run() {
-    if (!token) {
-        renderLoginForm()
-    } else {
-        fetchListe().then(liste => {
-            renderListe(liste)
-        })
-    }
-}
+
 
 
 run()
